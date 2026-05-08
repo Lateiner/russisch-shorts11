@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satzbau-Baukasten: Russisch</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .progress {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .target-area {
+            min-height: 80px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            background: #fafafa;
+        }
+
+        .tile {
+            padding: 12px 20px;
+            background: var(--accent);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tile.correct-placed {
+            background: var(--success);
+            cursor: default;
+        }
+
+        .tile.wrong-feedback {
+            background: var(--error);
+        }
+
+        .options-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .hidden { display: none; }
+
+        #restart-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="game-ui">
+        <div class="progress" id="sentence-counter">Satz 1 von 6</div>
+        <h1>Bilde den russischen Satz:</h1>
+        
+        <div class="target-area" id="target-area"></div>
+        <div class="options-area" id="options-area"></div>
+    </div>
+
+    <div id="finish-msg" class="hidden">
+        <h2 style="color: var(--success);">Hervorragend! 🎉</h2>
+        <p>Du hast alle 6 Sätze korrekt gebaut.</p>
+        <button id="restart-btn" onclick="startNewGame()">Komplett Neustart</button>
+    </div>
+</div>
+
+<script>
+    const sentences = [
+        ["Я", "случайно", "ляпнул", "об", "этом"],
+        ["На", "экзамене", "я", "ляпнула", "глупость"],
+        ["Ваня", "рассказал", "мне", "свой", "секрет"],
+        ["Он", "просто", "ляпнул", "не", "подумав"],
+        ["Об", "этом", "говорить", "сейчас", "нельзя"],
+        ["Она", "ляпнула", "это", "во", "время", "разговора"]
+    ];
+
+    let currentSentenceIndex = 0;
+    let currentWordIndex = 0;
+
+    function startNewGame() {
+        currentSentenceIndex = 0;
+        loadSentence();
+    }
+
+    function loadSentence() {
+        currentWordIndex = 0;
+        document.getElementById('target-area').innerHTML = '';
+        document.getElementById('finish-msg').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        document.getElementById('sentence-counter').innerText = `Satz ${currentSentenceIndex + 1} von 6`;
+
+        const words = sentences[currentSentenceIndex];
+        const shuffled = [...words].sort(() => Math.random() - 0.5);
+        
+        const optionsArea = document.getElementById('options-area');
+        optionsArea.innerHTML = '';
+
+        shuffled.forEach(word => {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.innerText = word;
+            tile.onclick = (e) => handleTileClick(word, e.target);
+            optionsArea.appendChild(tile);
+        });
+    }
+
+    function handleTileClick(word, tileElement) {
+        const targetSentence = sentences[currentSentenceIndex];
+        
+        if (word === targetSentence[currentWordIndex]) {
+            // Richtig
+            tileElement.classList.add('hidden');
+            
+            const newTile = document.createElement('div');
+            newTile.className = 'tile correct-placed';
+            newTile.innerText = word;
+            document.getElementById('target-area').appendChild(newTile);
+            
+            currentWordIndex++;
+
+            if (currentWordIndex === targetSentence.length) {
+                setTimeout(nextSentence, 800);
+            }
+        } else {
+            // Falsch
+            tileElement.classList.add('wrong-feedback');
+            tileElement.style.animation = "shake 0.3s";
+            setTimeout(() => {
+                tileElement.classList.remove('wrong-feedback');
+                tileElement.style.animation = "";
+            }, 500);
+        }
+    }
+
+    function nextSentence() {
+        currentSentenceIndex++;
+        if (currentSentenceIndex < sentences.length) {
+            loadSentence();
+        } else {
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('finish-msg').classList.remove('hidden');
+        }
+    }
+
+    // Start
+    startNewGame();
+</script>
+
+</body>
+</html>
