@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bild-Text-Matching: ляпнуть</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .image-box {
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            background: #eee;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (hover: hover) {
+            .option-btn:hover { border-color: var(--accent); background: #f0f7ff; }
+        }
+
+        .option-btn.correct {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        .hidden { display: none; }
+
+        #restart-btn {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="game-view">
+        <div class="image-box">
+            <img id="situation-img" src="" alt="Peinliche Situation">
+        </div>
+        <p>Wähle den passenden russischen Satz:</p>
+        <div class="options" id="options-container"></div>
+    </div>
+
+    <div id="result-view" class="hidden">
+        <h2>Klasse gemacht!</h2>
+        <p>Du hast alle Situationen richtig zugeordnet.</p>
+        <button id="restart-btn" onclick="initQuiz()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    // Datenstruktur mit den von dir hochgeladenen Dateinamen
+    const quizData = [
+        {
+            img: "geheimnis.jpg", 
+            options: [
+                { text: "Я случайно ляпнула секрет.", correct: true },
+                { text: "Я внимательно слушаю.", correct: false },
+                { text: "Мы долго гуляем.", correct: false }
+            ]
+        },
+        {
+            img: "schueler.jpg",
+            options: [
+                { text: "Все читают книгу.", correct: false },
+                { text: "Я ляпнул глупость на уроке.", correct: true },
+                { text: "Урок был очень скучный.", correct: false }
+            ]
+        },
+        {
+            img: "meeting.jpg",
+            options: [
+                { text: "Мы пишем годовой отчёт.", correct: false },
+                { text: "Я молчу на работе.", correct: false },
+                { text: "Ой, я это случайно ляпнул.", correct: true }
+            ]
+        }
+    ];
+
+    let currentStep = 0;
+
+    function initQuiz() {
+        currentStep = 0;
+        document.getElementById('game-view').classList.remove('hidden');
+        document.getElementById('result-view').classList.add('hidden');
+        showStep();
+    }
+
+    function showStep() {
+        const data = quizData[currentStep];
+        document.getElementById('situation-img').src = data.img;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        data.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => handleAnswer(opt.correct, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(isCorrect, btn) {
+        const buttons = document.querySelectorAll('.option-btn');
+        // Eingabe kurz sperren
+        buttons.forEach(b => b.disabled = true);
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            setTimeout(nextStep, 1000);
+        } else {
+            btn.classList.add('wrong');
+            // Die richtige Lösung zur Korrektur anzeigen
+            quizData[currentStep].options.forEach((opt, idx) => {
+                if (opt.correct) buttons[idx].classList.add('correct');
+            });
+            setTimeout(nextStep, 2000);
+        }
+    }
+
+    function nextStep() {
+        currentStep++;
+        if (currentStep < quizData.length) {
+            showStep();
+        } else {
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('result-view').classList.remove('hidden');
+        }
+    }
+
+    // Erster Aufruf
+    initQuiz();
+</script>
+
+</body>
+</html>
