@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory: ляпнуть</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --bg: #f4f7f6;
+            --card-back: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            perspective: 1000px;
+        }
+
+        .memory-card {
+            height: 100px;
+            background-color: var(--card-back);
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease-out, transform 0.5s;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .card-back {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .card-front {
+            background-color: white;
+            color: var(--primary);
+            transform: rotateY(180deg);
+            border: 2px solid var(--primary);
+        }
+
+        .controls { margin-top: 30px; }
+
+        #restart-btn {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Mobile Anpassungen */
+        @media (max-width: 500px) {
+            .memory-grid { grid-template-columns: repeat(3, 1fr); }
+            .memory-card { height: 90px; }
+            .card-front, .card-back { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Memory: Vokabel-Paare</h1>
+    <p>Finde die passenden russischen und deutschen Paare!</p>
+
+    <div class="memory-grid" id="grid"></div>
+
+    <div class="controls">
+        <button id="restart-btn" onclick="initGame()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const pairs = [
+        { ru: "ляпнуть", de: "unbedacht sagen" },
+        { ru: "ляпнул", de: "sagte es (maskulin)" },
+        { ru: "ляпнула", de: "sagte es (feminin)" },
+        { ru: "глупость", de: "Dummheit" },
+        { ru: "случайно", de: "zufällig / aus Versehen" },
+        { ru: "не подумав", de: "ohne nachzudenken" }
+    ];
+
+    let cards = [];
+    let flippedCards = [];
+    let lockBoard = false;
+
+    function initGame() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        flippedCards = [];
+        lockBoard = false;
+
+        // Karten-Array verdoppeln und mischen
+        let gameData = [];
+        pairs.forEach((pair, index) => {
+            gameData.push({ text: pair.ru, id: index });
+            gameData.push({ text: pair.de, id: index });
+        });
+        gameData.sort(() => Math.random() - 0.5);
+
+        gameData.forEach(data => {
+            const card = document.createElement('div');
+            card.className = 'memory-card';
+            card.dataset.pairId = data.id;
+            
+            card.innerHTML = `
+                <div class="card-back">?</div>
+                <div class="card-front">${data.text}</div>
+            `;
+            
+            card.addEventListener('click', flipCard);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard() {
+        if (lockBoard) return;
+        if (this === flippedCards[0]) return;
+
+        this.classList.add('flipped');
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+            checkMatch();
+        }
+    }
+
+    function checkMatch() {
+        const isMatch = flippedCards[0].dataset.pairId === flippedCards[1].dataset.pairId;
+
+        if (isMatch) {
+            disableCards();
+        } else {
+            unflipCards();
+        }
+    }
+
+    function disableCards() {
+        lockBoard = true;
+        // Langsam verschwinden lassen
+        setTimeout(() => {
+            flippedCards[0].classList.add('matched');
+            flippedCards[1].classList.add('matched');
+            resetBoard();
+        }, 600);
+    }
+
+    function unflipCards() {
+        lockBoard = true;
+        setTimeout(() => {
+            flippedCards[0].classList.remove('flipped');
+            flippedCards[1].classList.remove('flipped');
+            resetBoard();
+        }, 1000);
+    }
+
+    function resetBoard() {
+        [flippedCards, lockBoard] = [[], false];
+    }
+
+    // Spielstart
+    initGame();
+</script>
+
+</body>
+</html>
