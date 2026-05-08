@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swipe Quiz: Richtig oder Falsch?</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f0f2f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+
+        .card-stack {
+            position: relative;
+            height: 350px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: var(--primary);
+        }
+
+        /* Swipe Animationen */
+        .swipe-right {
+            transform: translateX(200%) rotate(20deg) !important;
+            opacity: 0;
+        }
+
+        .swipe-left {
+            transform: translateX(-200%) rotate(-20deg) !important;
+            opacity: 0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+
+        .btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active { transform: scale(0.9); }
+
+        .btn-false { background-color: var(--error); }
+        .btn-true { background-color: var(--success); }
+
+        .score-display {
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .hidden { display: none; }
+
+        #restart-btn {
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="game-view">
+        <div class="card-stack" id="card-stack">
+            </div>
+
+        <div class="controls">
+            <button class="btn btn-false" onclick="handleSwipe(false)">✘</button>
+            <button class="btn btn-true" onclick="handleSwipe(true)">✔</button>
+        </div>
+        <p style="color: #7f8c8d; margin-top: 15px;">Links = Falsch | Rechts = Richtig</p>
+    </div>
+
+    <div id="result-view" class="hidden">
+        <h2>Fertig!</h2>
+        <p id="final-score"></p>
+        <button id="restart-btn" onclick="location.reload()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { text: "«Ляпнуть» bedeutet, lange über eine Antwort nachzudenken.", correct: false },
+        { text: "Man benutzt «ляпнуть», wenn man aus Versehen ein Geheimnis verrät.", correct: true },
+        { text: "Das Verb gehört eher zur formellen Schriftsprache.", correct: false },
+        { text: "«Я ляпнул глупость» bedeutet: Ich habe etwas Dummes unbedacht gesagt.", correct: true },
+        { text: "Wenn man «ляпнул», war die Aussage meistens geplant.", correct: false }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+
+    function createCards() {
+        const stack = document.getElementById('card-stack');
+        quizData.forEach((data, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `card-${i}`;
+            card.style.zIndex = quizData.length - i;
+            card.innerHTML = `<h2>${data.text}</h2>`;
+            stack.appendChild(card);
+        });
+    }
+
+    function handleSwipe(isTrue) {
+        if (currentIndex >= quizData.length) return;
+
+        const card = document.getElementById(`card-${currentIndex}`);
+        const isCorrect = (isTrue === quizData[currentIndex].correct);
+
+        if (isCorrect) score++;
+
+        // Animation ausführen
+        if (isTrue) {
+            card.classList.add('swipe-right');
+        } else {
+            card.classList.add('swipe-left');
+        }
+
+        currentIndex++;
+
+        setTimeout(() => {
+            if (currentIndex === quizData.length) {
+                showResults();
+            }
+        }, 500);
+    }
+
+    function showResults() {
+        document.getElementById('game-view').classList.add('hidden');
+        const resultView = document.getElementById('result-view');
+        resultView.classList.remove('hidden');
+        document.getElementById('final-score').innerText = `Du hast ${score} von ${quizData.length} Aussagen richtig bewertet!`;
+    }
+
+    // Spiel starten
+    createCards();
+</script>
+
+</body>
+</html>
