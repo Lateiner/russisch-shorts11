@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch Quiz: Bedeutungserkennung</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            width: 90%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-box {
+            margin-bottom: 2rem;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            background: #f0f7ff;
+            padding: 1rem;
+            border-radius: 12px;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (hover: hover) {
+            .option-btn:hover {
+                border-color: var(--accent-color);
+                background: #f0f7ff;
+            }
+        }
+
+        .option-btn.correct {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error-color) !important;
+            border-color: var(--error-color) !important;
+            color: white;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        #restart-btn {
+            padding: 12px 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .quiz-container { padding: 1.2rem; }
+            h1 { font-size: 1.2rem; }
+            .question-box { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="progress-bar">
+        <div id="progress-fill"></div>
+    </div>
+
+    <h1>Welches Verb passt hier?</h1>
+    
+    <div id="game-content">
+        <div class="question-box" id="question">
+            Lade Frage...
+        </div>
+
+        <div class="options-grid" id="options">
+            <!-- Buttons werden hier eingefügt -->
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn" onclick="startQuiz()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            q: "Was bedeutet es, etwas zu sagen, ohne vorher nachzudenken?",
+            options: ["думать", "ляпнуть", "слушать"],
+            correct: 1
+        },
+        {
+            q: "Ich habe im Examen eine Dummheit 'rausgehauen'.",
+            options: ["ляпнула", "читала", "знала"],
+            correct: 0
+        },
+        {
+            q: "Was ist das Gegenteil von 'überlegt sprechen'?",
+            options: ["молчать", "ляпнуть", "писать"],
+            correct: 1
+        },
+        {
+            q: "Das Geheimnis wurde 'versehentlich ausgeplaudert'.",
+            options: ["сделал", "купил", "ляпнул"],
+            correct: 2
+        }
+    ];
+
+    let currentQuestion = 0;
+    let canAnswer = true;
+
+    function startQuiz() {
+        currentQuestion = 0;
+        canAnswer = true;
+        document.getElementById('restart-btn').style.display = 'none';
+        document.getElementById('game-content').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        canAnswer = true;
+        const data = quizData[currentQuestion];
+        document.getElementById('question').innerText = data.q;
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+
+        data.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+
+        updateProgress();
+    }
+
+    function checkAnswer(selected, btn) {
+        if (!canAnswer) return;
+        canAnswer = false;
+
+        const correct = quizData[currentQuestion].correct;
+        const buttons = document.querySelectorAll('.option-btn');
+
+        if (selected === correct) {
+            btn.classList.add('correct');
+            setTimeout(nextQuestion, 1000);
+        } else {
+            btn.classList.add('wrong');
+            buttons[correct].classList.add('correct');
+            setTimeout(nextQuestion, 2000);
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < quizData.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function updateProgress() {
+        const progress = (currentQuestion / quizData.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + "%";
+    }
+
+    function showResult() {
+        document.getElementById('progress-fill').style.width = "100%";
+        document.getElementById('question').innerText = "Gut gemacht! Du hast alle Fragen bearbeitet.";
+        document.getElementById('options').innerHTML = "";
+        document.getElementById('restart-btn').style.display = 'inline-block';
+    }
+
+    // Start
+    startQuiz();
+</script>
+
+</body>
+</html>
