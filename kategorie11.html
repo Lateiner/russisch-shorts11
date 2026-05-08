@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategorisierung: Positiv vs. Unüberlegt</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --error: #e74c3c;
+            --bg: #f0f2f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .instruction {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .sentence-display {
+            min-height: 100px;
+            background: #f9f9f9;
+            border: 2px dashed var(--accent);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .buckets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .bucket {
+            padding: 30px 10px;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bucket:hover { transform: translateY(-5px); }
+
+        .bucket-positive { border-color: var(--success); color: var(--success); }
+        .bucket-unuberlegt { border-color: var(--warning); color: var(--warning); }
+
+        .bucket-positive.active { background: var(--success); color: white; }
+        .bucket-unuberlegt.active { background: var(--warning); color: white; }
+
+        .icon { font-size: 3rem; }
+
+        #feedback {
+            margin-top: 20px;
+            font-weight: bold;
+            height: 24px;
+        }
+
+        .hidden { display: none; }
+
+        #restart-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 500px) {
+            .buckets { grid-template-columns: 1fr; }
+            .sentence-display { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>Kategorisierung</h1>
+    <p class="instruction">Lies den Satz und klicke auf den richtigen Korb.</p>
+
+    <div id="game-view">
+        <div class="sentence-display" id="current-sentence">Lade Satz...</div>
+
+        <div class="buckets">
+            <div class="bucket bucket-positive" onclick="checkSort('pos')">
+                <div class="icon">✅</div>
+                <strong>Überlegt / Positiv</strong>
+                <small>(сказать / подумать)</small>
+            </div>
+            <div class="bucket bucket-unuberlegt" onclick="checkSort('un')">
+                <div class="icon">🗯️</div>
+                <strong>Unüberlegt</strong>
+                <small>(ляпнуть)</small>
+            </div>
+        </div>
+        <div id="feedback"></div>
+    </div>
+
+    <div id="finish-view" class="hidden">
+        <h2>Hervorragend!</h2>
+        <p>Du hast alle Sätze richtig zugeordnet.</p>
+        <button id="restart-btn" onclick="location.reload()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const items = [
+        { text: "Я долго думал и ответил правильно.", cat: "pos" },
+        { text: "Извини, я случайно ляпнул лишнее.", cat: "un" },
+        { text: "Она всегда говорит вежливо и спокойно.", cat: "pos" },
+        { text: "На экзамене я ляпнула глупость.", cat: "un" },
+        { text: "Он просто ляпнул это, не подумав.", cat: "un" },
+        { text: "Мы обсудили план и всё решили.", cat: "pos" }
+    ];
+
+    let currentIndex = 0;
+
+    function showNext() {
+        if (currentIndex < items.length) {
+            document.getElementById('current-sentence').innerText = items[currentIndex].text;
+            document.getElementById('feedback').innerText = "";
+        } else {
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('finish-view').classList.remove('hidden');
+        }
+    }
+
+    function checkSort(category) {
+        const feedback = document.getElementById('feedback');
+        const correctCat = items[currentIndex].cat;
+
+        if (category === correctCat) {
+            feedback.innerText = "Richtig! ✨";
+            feedback.style.color = "var(--success)";
+            currentIndex++;
+            setTimeout(showNext, 1000);
+        } else {
+            feedback.innerText = "Nicht ganz. Überleg noch mal!";
+            feedback.style.color = "var(--error)";
+            // Kleiner Shake-Effekt
+            const display = document.getElementById('current-sentence');
+            display.style.borderColor = "var(--error)";
+            setTimeout(() => display.style.borderColor = "var(--accent)", 500);
+        }
+    }
+
+    // Start
+    showNext();
+</script>
+
+</body>
+</html>
