@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio-Quiz: Hörverstehen</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #e67e22;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-card {
+            width: 90%;
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .audio-controls {
+            margin-bottom: 30px;
+        }
+
+        .play-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+        }
+
+        .play-btn:hover { transform: scale(1.1); }
+        .play-btn:active { transform: scale(0.95); }
+
+        .instruction {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: var(--primary);
+            line-height: 1.4;
+        }
+
+        .options-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            background: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .choice-btn.correct {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .choice-btn.wrong {
+            background-color: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        #feedback-text {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        .hidden { display: none; }
+
+        #next-btn, #restart-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card">
+    <div id="game-content">
+        <div class="audio-controls">
+            <button class="play-btn" onclick="playAudio()">▶</button>
+            <p style="font-size: 0.8rem; color: #7f8c8d; margin-top: 10px;">Klicke, um den Satz zu hören</p>
+        </div>
+
+        <div class="instruction">
+            Wurde das Geheimnis absichtlich oder unbedacht verraten?
+        </div>
+
+        <div class="options-stack">
+            <button class="choice-btn" onclick="checkAnswer(false, this)">Absichtlich (Нарочно)</button>
+            <button class="choice-btn" onclick="checkAnswer(true, this)">Unbedacht (Случайно ляпнул)</button>
+        </div>
+        
+        <div id="feedback-text"></div>
+        <button id="next-btn" class="hidden" onclick="nextQuestion()">Nächster Satz</button>
+    </div>
+
+    <div id="finish-screen" class="hidden">
+        <h2>Prima!</h2>
+        <p>Du hast das Hörverstehen abgeschlossen.</p>
+        <button id="restart-btn" onclick="location.reload()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const quizQuestions = [
+        "Ваня рассказал мне свой секрет, а я случайно ляпнул об этом, когда говорил с Таней.",
+        "Я не хотел это говорить, я просто ляпнул не подумав.",
+        "На экзамене я ляпнула такую глупость, что сама удивилась."
+    ];
+
+    let currentIdx = 0;
+    let canAnswer = true;
+
+    function playAudio() {
+        const text = quizQuestions[currentIdx];
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU'; // Setzt die Sprache auf Russisch
+        utterance.rate = 0.9;     // Etwas langsamer für Lernende
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function checkAnswer(isCorrect, btn) {
+        if (!canAnswer) return;
+        
+        const feedback = document.getElementById('feedback-text');
+        const buttons = document.querySelectorAll('.choice-btn');
+
+        if (isCorrect) {
+            btn.classList.add('correct');
+            feedback.innerText = "Richtig! Das Verb «ляпнуть» zeigt, dass es keine Absicht war.";
+            feedback.style.color = "var(--success)";
+            canAnswer = false;
+            document.getElementById('next-btn').classList.remove('hidden');
+        } else {
+            btn.classList.add('wrong');
+            feedback.innerText = "Versuch es nochmal! Achte auf das Verb.";
+            feedback.style.color = "var(--error)";
+            setTimeout(() => {
+                btn.classList.remove('wrong');
+                feedback.innerText = "";
+            }, 1500);
+        }
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizQuestions.length) {
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('feedback-text').innerText = "";
+            document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+            canAnswer = true;
+            // Automatisch abspielen beim nächsten Schritt
+            setTimeout(playAudio, 500);
+        } else {
+            document.getElementById('game-content').classList.add('hidden');
+            document.getElementById('finish-screen').classList.remove('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>
