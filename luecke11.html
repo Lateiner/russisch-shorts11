@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Übung: Das Verb ляпнуть</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .instruction {
+            background: #e8f4fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .sentence {
+            font-size: 1.1rem;
+            line-height: 2.2;
+            margin-bottom: 1.2rem;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .drop-zone {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 110px;
+            height: 35px;
+            border-bottom: 2px dashed var(--accent-color);
+            vertical-align: middle;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+            padding: 0 10px;
+        }
+
+        .drop-zone.correct {
+            border-bottom: 2px solid var(--success-color);
+            color: var(--success-color);
+            background-color: #eafaf1;
+        }
+
+        .drop-zone.wrong {
+            border-bottom: 2px solid var(--error-color);
+            color: var(--error-color);
+            background-color: #fdeaea;
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            min-height: 60px;
+        }
+
+        .word-tile {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            touch-action: none;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .word-tile.selected {
+            transform: scale(1.1);
+            background-color: #2980b9;
+            outline: 3px solid #f1c40f;
+        }
+
+        .word-tile.hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        #restart-btn {
+            padding: 10px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        #restart-btn:hover {
+            background-color: #34495e;
+        }
+
+        @media (max-width: 600px) {
+            .sentence { font-size: 1rem; }
+            .word-tile { padding: 12px; font-size: 1rem; }
+            .drop-zone { min-width: 90px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Упражнение: Глагол «ляпнуть»</h1>
+    
+    <div class="instruction">
+        Tippe ein Wort an und klicke dann auf die passende Lücke. Die App prüft deine Antwort sofort!
+    </div>
+
+    <div id="exercise-area">
+        <div class="sentence">
+            1. Извини, я не хотел говорить об этом, я просто случайно <div class="drop-zone" data-answer="ляпнул"></div>.
+        </div>
+        <div class="sentence">
+            2. Маша очень расстроилась, потому что она <div class="drop-zone" data-answer="ляпнула"></div> глупость.
+        </div>
+        <div class="sentence">
+            3. Иногда лучше промолчать, чем что-то <div class="drop-zone" data-answer="ляпнуть"></div> не подумав.
+        </div>
+        <div class="sentence">
+            4. Не надо <div class="drop-zone" data-answer="ляпнуть"></div> лишнего, когда ты на работе.
+        </div>
+    </div>
+
+    <div class="options-container" id="options">
+        <!-- Wörter werden per JS erzeugt -->
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn" onclick="initGame()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const words = ["ляпнуть", "ляпнул", "ляпнула", "ляпнуть"];
+    let selectedTile = null;
+
+    function initGame() {
+        const optionsContainer = document.getElementById('options');
+        optionsContainer.innerHTML = '';
+        selectedTile = null;
+
+        // Erzeuge Kacheln und mische sie
+        const shuffled = [...words].sort(() => Math.random() - 0.5);
+        shuffled.forEach((word, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'word-tile';
+            tile.innerText = word;
+            tile.dataset.index = index;
+            tile.addEventListener('pointerdown', selectTile);
+            optionsContainer.appendChild(tile);
+        });
+
+        // Setze Lücken zurück
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.innerText = '';
+            zone.className = 'drop-zone';
+            zone.addEventListener('pointerdown', placeTile);
+        });
+    }
+
+    function selectTile(e) {
+        document.querySelectorAll('.word-tile').forEach(t => t.classList.remove('selected'));
+        selectedTile = e.currentTarget;
+        selectedTile.classList.add('selected');
+    }
+
+    function placeTile(e) {
+        const zone = e.currentTarget;
+        if (!selectedTile || zone.classList.contains('correct')) return;
+
+        const val = selectedTile.innerText;
+        zone.innerText = val;
+        
+        if (val === zone.dataset.answer) {
+            zone.className = 'drop-zone correct';
+            selectedTile.classList.add('hidden'); 
+            selectedTile = null;
+        } else {
+            zone.className = 'drop-zone wrong';
+            // Kurzes Feedback bei falscher Wahl, dann Lücke leeren
+            setTimeout(() => {
+                if(zone.className.includes('wrong')) {
+                    zone.innerText = '';
+                    zone.className = 'drop-zone';
+                }
+            }, 800);
+        }
+    }
+
+    // Initialisierung beim Laden
+    initGame();
+</script>
+
+</body>
+</html>
