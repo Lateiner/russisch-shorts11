@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog-Quiz: Das Geheimnis</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --person-a: #ffffff;
+            --person-b: #dcf8c6;
+            --accent: #34b7f1;
+            --text: #2c3e50;
+            --error: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 95%;
+            max-width: 500px;
+            background: #efe7dd; /* Klassischer Chat-Hintergrund */
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: #075e54;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-window {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 300px;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .bubble-a {
+            background: var(--person-a);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .bubble-b {
+            background: var(--person-b);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .options-area {
+            padding: 20px;
+            background: rgba(255,255,255,0.8);
+            border-top: 1px solid #ddd;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.3s;
+        }
+
+        .option-btn:hover { background: #29a3d8; }
+        .option-btn.wrong { background: var(--error); }
+
+        .hidden { display: none; }
+
+        #restart-btn {
+            background: #2c3e50;
+            margin-top: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">Russisch-Dialog: Das Geheimnis</div>
+    
+    <div class="chat-window" id="chat-window">
+        </div>
+
+    <div class="options-area" id="options-area">
+        <p id="instruction" style="margin-top:0; font-size: 0.85rem; color: #555;">Wähle die richtige Reaktion:</p>
+        <div id="buttons"></div>
+    </div>
+</div>
+
+<script>
+    const scenario = [
+        {
+            // Schritt 0
+            textA: "Привет! Пожалуйста, это секрет: я не иду в школу завтра.",
+            options: [
+                { text: "Окей, я буду молчать. (Ich werde schweigen)", next: 1, correct: true },
+                { text: "Я всё расскажу учителю! (Ich erzähle alles)", next: 1, correct: true }
+            ]
+        },
+        {
+            // Schritt 1
+            textA: "На следующий день (Am nächsten Tag): Почему учитель всё знает?!",
+            options: [
+                { text: "Извини, я случайно ляпнул об этом. (Ups, mir ist es rausgerutscht)", next: 2, correct: true },
+                { text: "Я долго и серьёзно это обсуждал. (Ich habe es ernsthaft diskutiert)", next: 2, correct: false }
+            ]
+        }
+    ];
+
+    let currentStep = 0;
+
+    function addBubble(text, type) {
+        const win = document.getElementById('chat-window');
+        const bubble = document.createElement('div');
+        bubble.className = `bubble bubble-${type}`;
+        bubble.innerText = text;
+        win.appendChild(bubble);
+        win.scrollTop = win.scrollHeight;
+    }
+
+    function loadStep() {
+        const step = scenario[currentStep];
+        addBubble(step.textA, 'a');
+
+        const btnContainer = document.getElementById('buttons');
+        btnContainer.innerHTML = '';
+
+        step.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => {
+                if (opt.correct) {
+                    addBubble(opt.text, 'b');
+                    currentStep++;
+                    if (currentStep < scenario.length) {
+                        setTimeout(loadStep, 1000);
+                    } else {
+                        finishScenario();
+                    }
+                } else {
+                    btn.classList.add('wrong');
+                    btn.innerText = "Das passt hier nicht zu 'ляпнуть'...";
+                    setTimeout(() => {
+                        btn.classList.remove('wrong');
+                        btn.innerText = opt.text;
+                    }, 2000);
+                }
+            };
+            btnContainer.appendChild(btn);
+        });
+    }
+
+    function finishScenario() {
+        document.getElementById('instruction').innerText = "Szenario beendet!";
+        const btnContainer = document.getElementById('buttons');
+        btnContainer.innerHTML = '<button class="option-btn" id="restart-btn" onclick="location.reload()">Neustart</button>';
+        addBubble("Ай-ай-ай... Больше не ляпай лишнего! (Nicht mehr aus Versehen ausplaudern!)", "a");
+    }
+
+    // Start
+    loadStep();
+</script>
+
+</body>
+</html>
