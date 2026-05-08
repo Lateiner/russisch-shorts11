@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuordnung: Situation & Reaktion</title>
+    <style>
+        :root {
+            --primary: #4a69bd;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #f0f2f5;
+            --text: #2f3640;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 { text-align: center; font-size: 1.5rem; margin-bottom: 10px; }
+        p.desc { text-align: center; color: #7f8c8d; margin-bottom: 30px; }
+
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .column-header {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .item {
+            background: #fff;
+            border: 2px solid #dcdde1;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.6s ease; /* Verlangsamt das Verschwinden */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 60px;
+            font-size: 0.95rem;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            opacity: 1;
+        }
+
+        .item.selected {
+            border-color: var(--primary);
+            background-color: #e1f5fe;
+            transform: scale(1.02);
+        }
+
+        .item.correct {
+            border-color: var(--success);
+            background-color: #dff9fb;
+            color: var(--success);
+            cursor: default;
+        }
+
+        /* Klasse für das langsame Verschwinden */
+        .item.hidden-pair {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background: var(--text);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .columns { grid-template-columns: 1fr; }
+            .column-header { margin-top: 20px; }
+            .game-container { padding: 1rem; }
+            .item { margin-bottom: 10px; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>Situation und Reaktion</h1>
+    <p class="desc">Verbinde die Paare. Richtige Paare verschwinden langsam.</p>
+
+    <div class="columns">
+        <div class="col-left">
+            <div class="column-header">Situation (Deutsch)</div>
+            <div id="left-items"></div>
+        </div>
+        <div class="col-right">
+            <div class="column-header">Reaktion (Russisch)</div>
+            <div id="right-items"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="initGame()">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const pairs = [
+        { id: 1, left: "Ich habe in der Prüfung nicht nachgedacht.", right: "Я ляпнула глупость." },
+        { id: 2, left: "Ich habe das Geheimnis versehentlich verraten.", right: "Я случайно ляпнул об этом." },
+        { id: 3, left: "Man sollte nicht unüberlegt reden.", right: "Нельзя просто так ляпнуть." },
+        { id: 4, left: "Er hat etwas Dummes ohne Grund gesagt.", right: "Он просто ляпнул что-то." }
+    ];
+
+    let selectedLeft = null;
+    let selectedRight = null;
+    let matches = 0;
+
+    function initGame() {
+        const leftContainer = document.getElementById('left-items');
+        const rightContainer = document.getElementById('right-items');
+        leftContainer.innerHTML = '';
+        rightContainer.innerHTML = '';
+        matches = 0;
+        selectedLeft = null;
+        selectedRight = null;
+
+        const shuffledLeft = [...pairs].sort(() => Math.random() - 0.5);
+        const shuffledRight = [...pairs].sort(() => Math.random() - 0.5);
+
+        shuffledLeft.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerText = pair.left;
+            div.dataset.id = pair.id;
+            div.onclick = () => handleSelect(div, 'left');
+            leftContainer.appendChild(div);
+        });
+
+        shuffledRight.forEach(pair => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerText = pair.right;
+            div.dataset.id = pair.id;
+            div.onclick = () => handleSelect(div, 'right');
+            rightContainer.appendChild(div);
+        });
+    }
+
+    function handleSelect(element, side) {
+        if (element.classList.contains('correct') || element.classList.contains('hidden-pair')) return;
+
+        const container = side === 'left' ? document.getElementById('left-items') : document.getElementById('right-items');
+        container.querySelectorAll('.item').forEach(i => i.classList.remove('selected'));
+        element.classList.add('selected');
+
+        if (side === 'left') selectedLeft = element;
+        else selectedRight = element;
+
+        if (selectedLeft && selectedRight) {
+            if (selectedLeft.dataset.id === selectedRight.dataset.id) {
+                // Kopien für den Timeout-Scope
+                const l = selectedLeft;
+                const r = selectedRight;
+                
+                l.classList.replace('selected', 'correct');
+                r.classList.replace('selected', 'correct');
+                
+                // Kurze Pause, dann langsam verschwinden lassen
+                setTimeout(() => {
+                    l.classList.add('hidden-pair');
+                    r.classList.add('hidden-pair');
+                }, 400);
+
+                selectedLeft = null;
+                selectedRight = null;
+                matches++;
+                
+                if (matches === pairs.length) {
+                    setTimeout(() => alert("Klasse! Alle Paare gefunden."), 1200);
+                }
+            } else {
+                const l = selectedLeft;
+                const r = selectedRight;
+                l.style.borderColor = 'var(--error)';
+                r.style.borderColor = 'var(--error)';
+                setTimeout(() => {
+                    l.classList.remove('selected');
+                    r.classList.remove('selected');
+                    l.style.borderColor = '';
+                    r.style.borderColor = '';
+                }, 500);
+                selectedLeft = null;
+                selectedRight = null;
+            }
+        }
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
